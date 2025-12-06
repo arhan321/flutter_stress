@@ -7,7 +7,8 @@ class IndividualAnalysisScreen extends StatefulWidget {
   const IndividualAnalysisScreen({super.key});
 
   @override
-  State<IndividualAnalysisScreen> createState() => _IndividualAnalysisScreenState();
+  State<IndividualAnalysisScreen> createState() =>
+      _IndividualAnalysisScreenState();
 }
 
 class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
@@ -21,6 +22,14 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
   List<Map<String, dynamic>> _availableDatasets = [];
   List<Map<String, dynamic>> _employeeList = [];
   String? _error;
+  String _renameFactor(String factor) {
+    switch (factor) {
+      case 'Work-Life Balance':
+        return 'Ketegangan dan Kesimbangan Kerja';
+      default:
+        return factor;
+    }
+  }
 
   @override
   void initState() {
@@ -37,7 +46,7 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
     try {
       // Initialize API with mock token for development
       await AuthApiService.mockLogin();
-      
+
       // Load datasets
       await _loadDatasets();
     } catch (e) {
@@ -54,10 +63,11 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
   Future<void> _loadDatasets() async {
     try {
       final response = await AuthApiService.getDatasets();
-      
+
       if (response['success'] == true && response['datasets'] != null) {
         setState(() {
-          _availableDatasets = List<Map<String, dynamic>>.from(response['datasets']);
+          _availableDatasets =
+              List<Map<String, dynamic>>.from(response['datasets']);
           // Auto-select first dataset if available
           if (_availableDatasets.isNotEmpty) {
             final firstDataset = _availableDatasets.first;
@@ -80,7 +90,7 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
 
   Future<void> _loadEmployeeList() async {
     if (_selectedDatasetId == null) return;
-    
+
     setState(() {
       _isLoading = true;
       _employeeList = [];
@@ -93,12 +103,14 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
     try {
       final datasetId = int.parse(_selectedDatasetId!);
       final response = await AuthApiService.getDatasetEmployees(datasetId);
-      
+
       if (response['success'] == true && response['employees'] != null) {
         setState(() {
-          _employeeList = List<Map<String, dynamic>>.from(response['employees']);
+          _employeeList =
+              List<Map<String, dynamic>>.from(response['employees']);
         });
-        print('Loaded ${_employeeList.length} employees from dataset $datasetId');
+        print(
+            'Loaded ${_employeeList.length} employees from dataset $datasetId');
       } else {
         throw Exception('Failed to load employees from API');
       }
@@ -116,7 +128,7 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
 
   Future<void> _analyzeEmployee(String employeeId) async {
     if (_selectedDatasetId == null) return;
-    
+
     setState(() {
       _isAnalyzing = true;
       _error = null;
@@ -124,8 +136,9 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
 
     try {
       final datasetId = int.parse(_selectedDatasetId!);
-      final response = await AuthApiService.analyzeEmployee(datasetId, employeeId);
-      
+      final response =
+          await AuthApiService.analyzeEmployee(datasetId, employeeId);
+
       print('=== ANALYSIS RESPONSE DEBUG ===');
       print('Response: $response');
       print('Success: ${response['success']}');
@@ -133,7 +146,7 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
       print('Stress Analysis: ${response['stress_analysis']}');
       print('Risk Factors: ${response['risk_factors']}');
       print('===============================');
-      
+
       if (response['success'] == true) {
         setState(() {
           _employeeData = response['employee_info'];
@@ -144,7 +157,8 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
         print('✅ Stress analysis set: ${_stressAnalysis != null}');
         print('✅ Stress analysis keys: ${_stressAnalysis?.keys}');
       } else {
-        throw Exception('Failed to analyze employee: ${response['error'] ?? 'Unknown error'}');
+        throw Exception(
+            'Failed to analyze employee: ${response['error'] ?? 'Unknown error'}');
       }
     } catch (e) {
       print('❌ Error analyzing employee: $e');
@@ -162,23 +176,34 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        // leading: Padding(
+        //   padding: const EdgeInsets.all(8.0),
+        //   child: Container(
+        //     decoration: BoxDecoration(
+        //       color: AppTheme.primaryColor,
+        //       borderRadius: BorderRadius.circular(8),
+        //     ),
+        //     child: const Center(
+        //       child: Text(
+        //         'WORK',
+        //         style: TextStyle(
+        //           color: Colors.white,
+        //           fontSize: 10,
+        //           fontWeight: FontWeight.bold,
+        //           letterSpacing: 0.5,
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // ),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Center(
-              child: Text(
-                'ACME',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
+          child: ClipOval(
+            child: Image.asset(
+              'asset/images/LWS.png',
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
             ),
           ),
         ),
@@ -194,30 +219,30 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
                 children: [
                   // Dataset Selection
                   _buildDatasetSelection(),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Employee Selection
                   _buildEmployeeSelection(),
-                  
+
                   if (_selectedEmployee != null) ...[
                     const SizedBox(height: 16),
-                    
+
                     // Employee Info Card
                     if (_employeeData != null) _buildEmployeeInfoCard(),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Stress Analysis Results
                     if (_stressAnalysis != null) _buildStressAnalysisCard(),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Risk Factors
                     if (_stressAnalysis != null) _buildRiskFactorsCard(),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Recommendations
                     if (_stressAnalysis != null) _buildRecommendationsCard(),
                   ],
@@ -297,7 +322,6 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
             if (_availableDatasets.isEmpty && _isLoading) ...[
               const Center(
                 child: Padding(
@@ -323,7 +347,8 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ),
             ] else ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   border: Border.all(color: AppTheme.borderColor),
                   borderRadius: BorderRadius.circular(8),
@@ -331,7 +356,8 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedDatasetId,
-                    icon: const Icon(Icons.keyboard_arrow_down, color: AppTheme.textSecondary),
+                    icon: const Icon(Icons.keyboard_arrow_down,
+                        color: AppTheme.textSecondary),
                     isExpanded: true,
                     items: _availableDatasets.map((dataset) {
                       return DropdownMenuItem<String>(
@@ -409,7 +435,6 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
             if (_isLoading) ...[
               const Center(
                 child: Padding(
@@ -435,7 +460,8 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ),
             ] else ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   border: Border.all(color: AppTheme.borderColor),
                   borderRadius: BorderRadius.circular(8),
@@ -443,8 +469,10 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedEmployee,
-                    hint: Text('Pilih karyawan... (${_employeeList.length} tersedia)'),
-                    icon: const Icon(Icons.keyboard_arrow_down, color: AppTheme.textSecondary),
+                    hint: Text(
+                        'Pilih karyawan... (${_employeeList.length} tersedia)'),
+                    icon: const Icon(Icons.keyboard_arrow_down,
+                        color: AppTheme.textSecondary),
                     isExpanded: true,
                     items: _employeeList.map((employee) {
                       return DropdownMenuItem<String>(
@@ -454,7 +482,8 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              employee['name'] ?? 'Employee ${employee['employee_id']}',
+                              employee['name'] ??
+                                  'Employee ${employee['employee_id']}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -482,7 +511,6 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
                   ),
                 ),
               ),
-              
               if (_selectedEmployee != null) ...[
                 const SizedBox(height: 12),
                 Container(
@@ -529,7 +557,7 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
 
   Widget _buildEmployeeInfoCard() {
     if (_employeeData == null) return const SizedBox.shrink();
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -554,17 +582,17 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
-            _buildInfoRow('Nama', _employeeData!['name'] ?? 'Employee ${_employeeData!['employee_id']}'),
+            _buildInfoRow(
+                'Nama',
+                _employeeData!['name'] ??
+                    'Employee ${_employeeData!['employee_id']}'),
             _buildInfoRow('ID Karyawan', _employeeData!['employee_id']),
             _buildInfoRow('Departemen', _employeeData!['department']),
             _buildInfoRow('Posisi', _employeeData!['position'] ?? 'Staff'),
             _buildInfoRow('Usia', '${_employeeData!['age']} tahun'),
-            
             const SizedBox(height: 12),
             const Divider(),
             const SizedBox(height: 8),
-            
             const Text(
               'Data Faktor Stres:',
               style: TextStyle(
@@ -573,12 +601,16 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            
-            _buildFactorRow('Beban Kerja', _employeeData!['workload']?.toDouble() ?? 0.0),
-            _buildFactorRow('Work-Life Balance', _employeeData!['work_life_balance']?.toDouble() ?? 0.0),
-            _buildFactorRow('Konflik Tim', _employeeData!['team_conflict']?.toDouble() ?? 0.0),
-            _buildFactorRow('Dukungan Manajemen', _employeeData!['management_support']?.toDouble() ?? 0.0),
-            _buildFactorRow('Lingkungan Kerja', _employeeData!['work_environment']?.toDouble() ?? 0.0),
+            _buildFactorRow(
+                'Beban Kerja', _employeeData!['workload']?.toDouble() ?? 0.0),
+            _buildFactorRow('Ketegangan dan Kesimbangan Kerja',
+                _employeeData!['work_life_balance']?.toDouble() ?? 0.0),
+            _buildFactorRow('Konflik Tim',
+                _employeeData!['team_conflict']?.toDouble() ?? 0.0),
+            _buildFactorRow('Dukungan Manajemen',
+                _employeeData!['management_support']?.toDouble() ?? 0.0),
+            _buildFactorRow('Lingkungan Kerja',
+                _employeeData!['work_environment']?.toDouble() ?? 0.0),
           ],
         ),
       ),
@@ -614,9 +646,11 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               value: value / 10,
               backgroundColor: AppTheme.borderColor,
               valueColor: AlwaysStoppedAnimation<Color>(
-                value >= 7 ? Colors.red :
-                value >= 5 ? Colors.orange :
-                Colors.green,
+                value >= 7
+                    ? Colors.red
+                    : value >= 5
+                        ? Colors.orange
+                        : Colors.green,
               ),
             ),
           ),
@@ -661,7 +695,7 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
     if (_stressAnalysis == null) {
       return const SizedBox.shrink();
     }
-    
+
     // Check if stress_analysis is nested or directly available
     final stressData = _stressAnalysis!['stress_analysis'] ?? _stressAnalysis!;
     final stressLevel = stressData['stress_level']?.toDouble() ?? 0.0;
@@ -669,12 +703,12 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
     final confidence = stressData['prediction_confidence']?.toDouble() ?? 0.0;
     final deptAverage = stressData['department_average']?.toDouble() ?? 0.0;
     final comparison = stressData['compared_to_department'] ?? '';
-    
+
     // If no stress level data, don't show the card
     if (stressLevel == 0.0 && category == 'Unknown') {
       return const SizedBox.shrink();
     }
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -699,7 +733,7 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Stress Level Circle
             Center(
               child: Column(
@@ -758,7 +792,8 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
@@ -785,9 +820,10 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
     if (_stressAnalysis == null || _stressAnalysis!['risk_factors'] == null) {
       return const SizedBox.shrink();
     }
-    
-    final riskFactors = List<Map<String, dynamic>>.from(_stressAnalysis!['risk_factors']);
-    
+
+    final riskFactors =
+        List<Map<String, dynamic>>.from(_stressAnalysis!['risk_factors']);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -812,7 +848,6 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
             ...riskFactors.map((factor) => _buildRiskFactorItem(factor)),
           ],
         ),
@@ -823,7 +858,7 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
   Widget _buildRiskFactorItem(Map<String, dynamic> factor) {
     final value = factor['value']?.toDouble() ?? 0.0;
     final impact = factor['impact'] ?? 'Unknown';
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -832,8 +867,15 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Text(
+              //   factor['factor'] ?? 'Unknown Factor',
+              //   style: const TextStyle(
+              //     fontSize: 14,
+              //     fontWeight: FontWeight.w600,
+              //   ),
+              // ),
               Text(
-                factor['factor'] ?? 'Unknown Factor',
+                _renameFactor(factor['factor'] ?? 'Unknown Factor'),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -857,15 +899,12 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          
           LinearProgressIndicator(
             value: value / 10,
             backgroundColor: AppTheme.borderColor,
             valueColor: AlwaysStoppedAnimation<Color>(_getImpactColor(impact)),
           ),
-          
           const SizedBox(height: 4),
-          
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -901,9 +940,10 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
     if (_stressAnalysis == null || _stressAnalysis!['risk_factors'] == null) {
       return const SizedBox.shrink();
     }
-    
-    final riskFactors = List<Map<String, dynamic>>.from(_stressAnalysis!['risk_factors']);
-    
+
+    final riskFactors =
+        List<Map<String, dynamic>>.from(_stressAnalysis!['risk_factors']);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -928,7 +968,6 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
             if (_stressAnalysis!['recommendations_summary'] != null) ...[
               Container(
                 padding: const EdgeInsets.all(12),
@@ -948,7 +987,6 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
               ),
               const SizedBox(height: 16),
             ],
-            
             ...riskFactors.asMap().entries.map((entry) {
               final index = entry.key;
               final factor = entry.value;
@@ -989,8 +1027,15 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Text(
+                //   factor['factor'] ?? 'Unknown Factor',
+                //   style: const TextStyle(
+                //     fontSize: 14,
+                //     fontWeight: FontWeight.w600,
+                //   ),
+                // ),
                 Text(
-                  factor['factor'] ?? 'Unknown Factor',
+                  _renameFactor(factor['factor'] ?? 'Unknown Factor'),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1036,4 +1081,3 @@ class _IndividualAnalysisScreenState extends State<IndividualAnalysisScreen> {
     }
   }
 }
-

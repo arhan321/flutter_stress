@@ -21,7 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _currentDatasetStats;
   Map<String, dynamic>? _selectedDatasetAnalysis;
   bool _isLoadingDatasetAnalysis = false;
-  
+
   // Dynamic recommendations state
   List<Map<String, dynamic>> _dynamicRecommendations = [];
   bool _isLoadingRecommendations = false;
@@ -37,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _isLoadingDatasets = true;
     });
-    
+
     try {
       final user = context.read<AppStateProvider>().currentUser;
       final token = user?['token'];
@@ -46,11 +46,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final result = await AuthApiService.getDatasets(token: token);
 
         if (result['success'] == true && mounted) {
-          final datasets = List<Map<String, dynamic>>.from(result['datasets'] ?? []);
+          final datasets =
+              List<Map<String, dynamic>>.from(result['datasets'] ?? []);
           setState(() {
             _availableDatasets = datasets;
             _isLoadingDatasets = false;
-            
+
             if (datasets.isNotEmpty && _selectedDatasetId == null) {
               _selectedDatasetId = datasets.first['id'].toString();
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -109,7 +110,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     //     ),
     //   );
     // }
-    
+
     // Optional: Log message to console for debugging (dapat dihapus jika tidak diperlukan)
     print('SUCCESS: $message');
   }
@@ -118,23 +119,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        // leading: Padding(
+        //   padding: const EdgeInsets.all(8.0),
+        //   child: Container(
+        //     decoration: BoxDecoration(
+        //       color: AppTheme.primaryColor,
+        //       borderRadius: BorderRadius.circular(8),
+        //     ),
+        //     child: const Center(
+        //       child: Text(
+        //         'WORK',
+        //         style: TextStyle(
+        //           color: Colors.white,
+        //           fontSize: 10,
+        //           fontWeight: FontWeight.bold,
+        //           letterSpacing: 0.5,
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // ),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Center(
-              child: Text(
-                'ACME',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
+          child: ClipOval(
+            child: Image.asset(
+              'asset/images/LWS.png',
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
             ),
           ),
         ),
@@ -179,7 +191,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       border: Border.all(color: AppTheme.borderColor),
                       borderRadius: BorderRadius.circular(8),
@@ -204,17 +217,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             : DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: _selectedDatasetId,
-                                  icon: const Icon(Icons.keyboard_arrow_down, color: AppTheme.textSecondary),
+                                  icon: const Icon(Icons.keyboard_arrow_down,
+                                      color: AppTheme.textSecondary),
                                   isExpanded: true,
                                   items: _availableDatasets.map((dataset) {
                                     return DropdownMenuItem<String>(
                                       value: dataset['id'].toString(),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            dataset['name'] ?? 'Unnamed Dataset',
+                                            dataset['name'] ??
+                                                'Unnamed Dataset',
                                             style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
@@ -278,7 +294,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _formatDate(String? dateString) {
     if (dateString == null) return 'Unknown date';
-    
+
     try {
       final date = DateTime.parse(dateString);
       return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
@@ -292,7 +308,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       (dataset) => dataset['id'].toString() == datasetId,
       orElse: () => {},
     );
-    
+
     if (selectedDataset.isNotEmpty) {
       setState(() {
         _isLoadingDatasetAnalysis = true;
@@ -312,92 +328,121 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
 
           print('DEBUG: Basic analysis result: ${basicResult['success']}');
-          print('DEBUG: Full basic analysis response: ${basicResult.toString()}');
+          print(
+              'DEBUG: Full basic analysis response: ${basicResult.toString()}');
 
           if (basicResult['success'] == true && mounted) {
             final analysis = basicResult['analysis'];
-            final factorImportance = analysis['factor_importance'] as Map<String, dynamic>? ?? {};
-            
+            final factorImportance =
+                analysis['factor_importance'] as Map<String, dynamic>? ?? {};
+
             print('DEBUG: Factor importance from basic analysis:');
             factorImportance.forEach((factor, data) {
               print('  $factor: $data');
             });
-            
+
             // Check if we have meaningful factor data
             bool hasValidFactorData = false;
             factorImportance.forEach((factor, data) {
               if (data is Map) {
-                final correlation = data['correlation_with_stress']?.toDouble() ?? 0.0;
-                final importance = data['importance_percentage']?.toDouble() ?? 0.0;
+                final correlation =
+                    data['correlation_with_stress']?.toDouble() ?? 0.0;
+                final importance =
+                    data['importance_percentage']?.toDouble() ?? 0.0;
                 if (correlation.abs() > 0.001 || importance > 0.1) {
                   hasValidFactorData = true;
                 }
               }
             });
-            
-            print('DEBUG: Has valid factor data from basic analysis: $hasValidFactorData');
-            
+
+            print(
+                'DEBUG: Has valid factor data from basic analysis: $hasValidFactorData');
+
             // If basic analysis doesn't have good factor data, try enhanced analysis
             if (!hasValidFactorData) {
-              print('DEBUG: Basic analysis lacks factor data, attempting enhanced analysis...');
-              
+              print(
+                  'DEBUG: Basic analysis lacks factor data, attempting enhanced analysis...');
+
               try {
-                final enhancedResult = await AuthApiService.performEnhancedAnalysis(
+                final enhancedResult =
+                    await AuthApiService.performEnhancedAnalysis(
                   token: token,
                   datasetId: int.parse(datasetId),
                 );
-                
-                print('DEBUG: Enhanced analysis result: ${enhancedResult['success']}');
-                
-                if (enhancedResult['success'] != false && enhancedResult['summary'] != null) {
+
+                print(
+                    'DEBUG: Enhanced analysis result: ${enhancedResult['success']}');
+
+                if (enhancedResult['success'] != false &&
+                    enhancedResult['summary'] != null) {
                   print('DEBUG: Using enhanced analysis data');
-                  
+
                   // Create a modified analysis object with enhanced data
                   final enhancedSummary = enhancedResult['summary'];
-                  final enhancedRecommendations = enhancedResult['recommendations'] as List? ?? [];
-                  
+                  final enhancedRecommendations =
+                      enhancedResult['recommendations'] as List? ?? [];
+
                   // Extract factor data from recommendations
                   Map<String, dynamic> enhancedFactorImportance = {};
                   for (var rec in enhancedRecommendations) {
                     final title = rec['title'] as String? ?? '';
                     final priority = rec['priority'] as String? ?? 'medium';
-                    final confidence = rec['confidence_score']?.toDouble() ?? 0.5;
-                    
+                    final confidence =
+                        rec['confidence_score']?.toDouble() ?? 0.5;
+
                     // Map recommendation to factor
                     String factorKey = '';
-                    if (title.toLowerCase().contains('beban kerja') || title.toLowerCase().contains('workload')) {
+                    if (title.toLowerCase().contains('beban kerja') ||
+                        title.toLowerCase().contains('workload')) {
                       factorKey = 'workload';
-                    } else if (title.toLowerCase().contains('work-life') || title.toLowerCase().contains('keseimbangan')) {
+                    } else if (title.toLowerCase().contains('work-life') ||
+                        title.toLowerCase().contains('keseimbangan')) {
                       factorKey = 'work_life_balance';
-                    } else if (title.toLowerCase().contains('manajemen') || title.toLowerCase().contains('management')) {
+                    } else if (title.toLowerCase().contains('manajemen') ||
+                        title.toLowerCase().contains('management')) {
                       factorKey = 'management_support';
-                    } else if (title.toLowerCase().contains('lingkungan') || title.toLowerCase().contains('environment')) {
+                    } else if (title.toLowerCase().contains('lingkungan') ||
+                        title.toLowerCase().contains('environment')) {
                       factorKey = 'work_environment';
-                    } else if (title.toLowerCase().contains('konflik') || title.toLowerCase().contains('tim')) {
+                    } else if (title.toLowerCase().contains('konflik') ||
+                        title.toLowerCase().contains('tim')) {
                       factorKey = 'team_conflict';
                     } else {
-                      factorKey = 'general_factor_${enhancedFactorImportance.length + 1}';
+                      factorKey =
+                          'general_factor_${enhancedFactorImportance.length + 1}';
                     }
-                    
+
                     // Create synthetic factor data based on recommendation priority and confidence
                     double correlation = 0.0;
                     double importance = 0.0;
-                    
+
                     switch (priority.toLowerCase()) {
                       case 'high':
-                        correlation = (0.4 + (confidence * 0.3)) * (factorKey.contains('support') || factorKey.contains('environment') ? -1 : 1);
+                        correlation = (0.4 + (confidence * 0.3)) *
+                            (factorKey.contains('support') ||
+                                    factorKey.contains('environment')
+                                ? -1
+                                : 1);
                         importance = 60.0 + (confidence * 25.0);
                         break;
                       case 'medium':
-                        correlation = (0.25 + (confidence * 0.2)) * (factorKey.contains('support') || factorKey.contains('environment') ? -1 : 1);
+                        correlation = (0.25 + (confidence * 0.2)) *
+                            (factorKey.contains('support') ||
+                                    factorKey.contains('environment')
+                                ? -1
+                                : 1);
                         importance = 35.0 + (confidence * 20.0);
                         break;
                       case 'low':
-                        correlation = (0.15 + (confidence * 0.15)) * (factorKey.contains('support') || factorKey.contains('environment') ? -1 : 1);
+                        correlation = (0.15 + (confidence * 0.15)) *
+                            (factorKey.contains('support') ||
+                                    factorKey.contains('environment')
+                                ? -1
+                                : 1);
                         importance = 15.0 + (confidence * 15.0);
                         break;
                     }
-                    
+
                     enhancedFactorImportance[factorKey] = {
                       'correlation_with_stress': correlation,
                       'importance_percentage': importance,
@@ -405,49 +450,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       'source': 'enhanced_analysis',
                     };
                   }
-                  
+
                   print('DEBUG: Created synthetic factor importance:');
                   enhancedFactorImportance.forEach((factor, data) {
                     print('  $factor: $data');
                   });
-                  
+
                   // Merge enhanced data with basic analysis
                   final mergedAnalysis = Map<String, dynamic>.from(analysis);
-                  mergedAnalysis['factor_importance'] = enhancedFactorImportance;
-                  mergedAnalysis['overall_stress_level'] = enhancedSummary['overall_stress_level'];
-                  mergedAnalysis['stress_category'] = enhancedSummary['stress_category'];
-                  mergedAnalysis['total_employees'] = enhancedSummary['total_employees'];
+                  mergedAnalysis['factor_importance'] =
+                      enhancedFactorImportance;
+                  mergedAnalysis['overall_stress_level'] =
+                      enhancedSummary['overall_stress_level'];
+                  mergedAnalysis['stress_category'] =
+                      enhancedSummary['stress_category'];
+                  mergedAnalysis['total_employees'] =
+                      enhancedSummary['total_employees'];
                   mergedAnalysis['data_source'] = 'enhanced_analysis';
-                  
+
                   final mergedResult = Map<String, dynamic>.from(basicResult);
                   mergedResult['analysis'] = mergedAnalysis;
-                  
+
                   setState(() {
                     _selectedDatasetAnalysis = mergedResult;
                     _isLoadingDatasetAnalysis = false;
                   });
-                  
+
                   final appState = context.read<AppStateProvider>();
-                  final stressLevel = (enhancedSummary['overall_stress_level'] as num?)?.toDouble() ?? 0.0;
-                  
+                  final stressLevel =
+                      (enhancedSummary['overall_stress_level'] as num?)
+                              ?.toDouble() ??
+                          0.0;
+
                   Map<String, double> factors = {};
                   enhancedFactorImportance.forEach((factor, data) {
                     final displayName = _getFactorDisplayName(factor);
-                    final importance = (data['importance_percentage'] as num?)?.toDouble() ?? 0.0;
+                    final importance =
+                        (data['importance_percentage'] as num?)?.toDouble() ??
+                            0.0;
                     factors[displayName] = importance;
                   });
-                  
+
                   appState.setAnalysisResults(stressLevel, factors);
-                  
+
                   // Fetch dynamic recommendations after successful enhanced analysis
                   _fetchDynamicRecommendations(datasetId);
-                  
+
                   _showSuccessMessage(
-                    '🧠 Analisis Enhanced ML selesai: ${basicResult['dataset_info']['name']}\n'
-                    '👥 Total: ${enhancedSummary['total_employees']} karyawan\n'
-                    '📈 Rata-rata Stres: ${stressLevel.toStringAsFixed(1)}% (${enhancedSummary['stress_category']})'
-                  );
-                  
+                      '🧠 Analisis Enhanced ML selesai: ${basicResult['dataset_info']['name']}\n'
+                      '👥 Total: ${enhancedSummary['total_employees']} karyawan\n'
+                      '📈 Rata-rata Stres: ${stressLevel.toStringAsFixed(1)}% (${enhancedSummary['stress_category']})');
+
                   return; // Exit early since we used enhanced analysis
                 }
               } catch (enhancedError) {
@@ -455,7 +508,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Continue with basic analysis even if enhanced fails
               }
             }
-            
+
             // Use basic analysis (original logic)
             setState(() {
               _selectedDatasetAnalysis = basicResult;
@@ -463,14 +516,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             });
 
             final appState = context.read<AppStateProvider>();
-     
+
             double stressLevel = 0.0;
             try {
-              stressLevel = (analysis['overall_stress_level'] as num?)?.toDouble() ?? 0.0;
+              stressLevel =
+                  (analysis['overall_stress_level'] as num?)?.toDouble() ?? 0.0;
             } catch (e) {
               stressLevel = 0.0;
             }
-            
+
             Map<String, double> factors = {};
             try {
               final factorImportance = analysis['factor_importance'];
@@ -479,11 +533,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   try {
                     String displayName = _getFactorDisplayName(factor);
                     double importance = 0.0;
-                    
+
                     if (data is Map && data['importance_percentage'] != null) {
-                      importance = (data['importance_percentage'] as num?)?.toDouble() ?? 0.0;
+                      importance =
+                          (data['importance_percentage'] as num?)?.toDouble() ??
+                              0.0;
                     }
-                    
+
                     factors[displayName] = importance;
                   } catch (e) {
                     // Handle individual factor parsing errors
@@ -493,22 +549,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             } catch (e) {
               // Handle factor importance parsing errors
             }
-            
+
             appState.setAnalysisResults(stressLevel, factors);
 
             final datasetInfo = basicResult['dataset_info'];
             final totalEmployees = analysis['total_employees'] ?? 0;
             final stressCategory = analysis['stress_category'] ?? 'Unknown';
-            
-            _showSuccessMessage(
-              '📊 Analisis selesai: ${datasetInfo['name']}\n'
-              '👥 Total: $totalEmployees karyawan\n'
-              '📈 Rata-rata Stres: ${stressLevel.toStringAsFixed(1)}% ($stressCategory)'
-            );
-            
+
+            _showSuccessMessage('📊 Analisis selesai: ${datasetInfo['name']}\n'
+                '👥 Total: $totalEmployees karyawan\n'
+                '📈 Rata-rata Stres: ${stressLevel.toStringAsFixed(1)}% ($stressCategory)');
+
             // Fetch dynamic recommendations after successful analysis
             _fetchDynamicRecommendations(datasetId);
-            
           } else {
             setState(() {
               _isLoadingDatasetAnalysis = false;
@@ -532,7 +585,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _isLoadingDatasetAnalysis = false;
       });
-      _showErrorMessage('Dataset yang dipilih tidak ditemukan. Silakan refresh dan coba lagi.');
+      _showErrorMessage(
+          'Dataset yang dipilih tidak ditemukan. Silakan refresh dan coba lagi.');
     }
   }
 
@@ -566,14 +620,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 12,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            AppTheme.primaryColor),
                       ),
                     ),
                   ),
               ],
             ),
             const SizedBox(height: 12),
-            
             if (_selectedDatasetAnalysis != null) ...[
               _buildSelectedDatasetStats(),
             ] else if (_currentDatasetStats != null) ...[
@@ -612,7 +666,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final datasetInfo = _selectedDatasetAnalysis!['dataset_info'];
     final analysis = _selectedDatasetAnalysis!['analysis'];
     final stressDistribution = analysis['stress_distribution'];
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -645,9 +699,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Main statistics row
         Container(
           padding: const EdgeInsets.all(12),
@@ -662,31 +716,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 child: _buildMainStatItem(
                   icon: Icons.people,
-                  value: '${(analysis['total_employees'] as num?)?.toInt() ?? 0}',
+                  value:
+                      '${(analysis['total_employees'] as num?)?.toInt() ?? 0}',
                   label: 'employees',
                   color: Colors.blue.shade600,
                 ),
               ),
-              
+
               Container(width: 1, height: 30, color: Colors.blue.shade300),
-              
-              // Departments count  
+
+              // Departments count
               Expanded(
                 child: _buildMainStatItem(
                   icon: Icons.business,
-                  value: '${(analysis['data_quality']['departments_count'] as num?)?.toInt() ?? 0}',
+                  value:
+                      '${(analysis['data_quality']['departments_count'] as num?)?.toInt() ?? 0}',
                   label: 'departments',
                   color: Colors.blue.shade600,
                 ),
               ),
-              
+
               Container(width: 1, height: 30, color: Colors.blue.shade300),
-              
+
               // Average stress
               Expanded(
                 child: _buildMainStatItem(
                   icon: Icons.trending_up,
-                  value: '${((analysis['overall_stress_level'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(1)}%',
+                  value:
+                      '${((analysis['overall_stress_level'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(1)}%',
                   label: 'avg stress',
                   color: Colors.blue.shade600,
                 ),
@@ -694,9 +751,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Risk distribution breakdown
         Container(
           padding: const EdgeInsets.all(12),
@@ -727,17 +784,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Risk categories
               Row(
                 children: [
                   Expanded(
                     child: _buildRiskCategoryItem(
                       label: 'High Risk',
-                      count: (stressDistribution['high_risk'] as num?)?.toInt() ?? 0,
-                      percentage: (stressDistribution['high_risk_percentage'] as num?)?.toDouble() ?? 0.0,
+                      count:
+                          (stressDistribution['high_risk'] as num?)?.toInt() ??
+                              0,
+                      percentage:
+                          (stressDistribution['high_risk_percentage'] as num?)
+                                  ?.toDouble() ??
+                              0.0,
                       color: Colors.red,
                       icon: Icons.warning,
                     ),
@@ -746,8 +808,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Expanded(
                     child: _buildRiskCategoryItem(
                       label: 'Medium Risk',
-                      count: (stressDistribution['medium_risk'] as num?)?.toInt() ?? 0,
-                      percentage: (stressDistribution['medium_risk_percentage'] as num?)?.toDouble() ?? 0.0,
+                      count: (stressDistribution['medium_risk'] as num?)
+                              ?.toInt() ??
+                          0,
+                      percentage:
+                          (stressDistribution['medium_risk_percentage'] as num?)
+                                  ?.toDouble() ??
+                              0.0,
                       color: Colors.orange,
                       icon: Icons.info,
                     ),
@@ -756,8 +823,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Expanded(
                     child: _buildRiskCategoryItem(
                       label: 'Low Risk',
-                      count: (stressDistribution['low_risk'] as num?)?.toInt() ?? 0,
-                      percentage: (stressDistribution['low_risk_percentage'] as num?)?.toDouble() ?? 0.0,
+                      count:
+                          (stressDistribution['low_risk'] as num?)?.toInt() ??
+                              0,
+                      percentage:
+                          (stressDistribution['low_risk_percentage'] as num?)
+                                  ?.toDouble() ??
+                              0.0,
                       color: Colors.green,
                       icon: Icons.check_circle,
                     ),
@@ -841,9 +913,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: color,
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
             count.toString(),
             style: TextStyle(
@@ -852,9 +924,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: color,
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Visual progress indicator
           Container(
             width: double.infinity,
@@ -874,9 +946,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Label
           Text(
             label,
@@ -887,9 +959,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: 2),
-          
+
           // Percentage
           Text(
             '${percentage.toStringAsFixed(1)}%',
@@ -906,7 +978,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _getDataQualityDescription(Map<String, dynamic>? dataQuality) {
     if (dataQuality == null) return 'Unknown';
-    
+
     final completeness = dataQuality['completeness_score']?.toDouble() ?? 0.0;
     if (completeness >= 0.9) return 'Excellent';
     if (completeness >= 0.8) return 'Good';
@@ -946,7 +1018,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildStressLevelCard(AppStateProvider appState) {
     final stressLevel = appState.currentStressLevel;
     final stressText = AppTheme.getStressCategory(stressLevel);
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -993,9 +1065,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            
             const SizedBox(height: 24),
-            
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -1016,7 +1086,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: CircularProgressIndicator(
                           value: (stressLevel / 100).toDouble(),
                           backgroundColor: Colors.grey.shade300,
-                          valueColor: AlwaysStoppedAnimation<Color>(_getStressColor(stressLevel)),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              _getStressColor(stressLevel)),
                           strokeWidth: 8,
                         ),
                       ),
@@ -1062,7 +1133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildFactorsCard(AppStateProvider appState) {
     final factors = appState.factorImportance;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1093,13 +1164,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            
             const SizedBox(height: 16),
-            
-            ...factors.entries.map((entry) => _buildFactorItem(
-              entry.key,
-              entry.value,
-            )).toList(),
+            ...factors.entries
+                .map((entry) => _buildFactorItem(
+                      entry.key,
+                      entry.value,
+                    ))
+                .toList(),
           ],
         ),
       ),
@@ -1203,9 +1274,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Dynamic interpretation based on selected dataset
             if (_selectedDatasetAnalysis != null) ...[
               _buildDynamicInterpretation(appState),
@@ -1227,83 +1298,105 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildDynamicInterpretation(AppStateProvider appState) {
     final analysis = _selectedDatasetAnalysis!['analysis'];
-    final factorImportance = analysis['factor_importance'] as Map<String, dynamic>? ?? {};
-    final overallStress = (analysis['overall_stress_level'] as num?)?.toDouble() ?? appState.currentStressLevel;
-    final departmentCount = (analysis['data_quality']['departments_count'] as num?)?.toInt() ?? 0;
-    
+    final factorImportance =
+        analysis['factor_importance'] as Map<String, dynamic>? ?? {};
+    final overallStress =
+        (analysis['overall_stress_level'] as num?)?.toDouble() ??
+            appState.currentStressLevel;
+    final departmentCount =
+        (analysis['data_quality']['departments_count'] as num?)?.toInt() ?? 0;
+
     // Debug: Print factor importance data to console
     print('DEBUG: Factor importance data from backend:');
     print('DEBUG: Raw factorImportance object: $factorImportance');
     factorImportance.forEach((factor, data) {
       print('DEBUG: $factor: RAW=$data');
       if (data is Map) {
-        print('  - correlation_with_stress: ${data['correlation_with_stress']} (type: ${data['correlation_with_stress']?.runtimeType})');
-        print('  - importance_percentage: ${data['importance_percentage']} (type: ${data['importance_percentage']?.runtimeType})');
+        print(
+            '  - correlation_with_stress: ${data['correlation_with_stress']} (type: ${data['correlation_with_stress']?.runtimeType})');
+        print(
+            '  - importance_percentage: ${data['importance_percentage']} (type: ${data['importance_percentage']?.runtimeType})');
       }
     });
-    
+
     // Find top increasing and decreasing factors with enhanced logic
     Map<String, dynamic>? topIncreasingFactor;
     Map<String, dynamic>? topDecreasingFactor;
     double maxPositiveCorrelation = 0.0;
     double maxNegativeCorrelation = 0.0;
-    
+
     // Pre-process data and create synthetic correlations if needed
     Map<String, Map<String, dynamic>> processedFactors = {};
-    
+
     factorImportance.forEach((factor, data) {
       if (data is Map) {
-        double correlation = (data['correlation_with_stress'] as num?)?.toDouble() ?? 0.0;
-        double importance = (data['importance_percentage'] as num?)?.toDouble() ?? 0.0;
-        
+        double correlation =
+            (data['correlation_with_stress'] as num?)?.toDouble() ?? 0.0;
+        double importance =
+            (data['importance_percentage'] as num?)?.toDouble() ?? 0.0;
+
         // If correlation is 0 but importance exists, generate synthetic correlation
         if (correlation == 0.0 && importance > 0) {
           // Generate realistic correlation based on importance and factor type
           double syntheticCorrelation = 0.0;
-          
+
           // Factors that typically increase stress (positive correlation)
-          if (factor.contains('workload') || factor.contains('conflict') || 
-              factor.contains('pressure') || factor.contains('overtime')) {
-            syntheticCorrelation = (importance / 100) * (0.3 + (importance * 0.005)); // 0.3 to 0.8 range
-          } 
+          if (factor.contains('workload') ||
+              factor.contains('conflict') ||
+              factor.contains('pressure') ||
+              factor.contains('overtime')) {
+            syntheticCorrelation = (importance / 100) *
+                (0.3 + (importance * 0.005)); // 0.3 to 0.8 range
+          }
           // Factors that typically decrease stress (negative correlation)
-          else if (factor.contains('support') || factor.contains('environment') || 
-                   factor.contains('balance') || factor.contains('satisfaction')) {
-            syntheticCorrelation = -1 * (importance / 100) * (0.25 + (importance * 0.004)); // -0.25 to -0.65 range
+          else if (factor.contains('support') ||
+              factor.contains('environment') ||
+              factor.contains('balance') ||
+              factor.contains('satisfaction')) {
+            syntheticCorrelation = -1 *
+                (importance / 100) *
+                (0.25 + (importance * 0.004)); // -0.25 to -0.65 range
           }
           // Mixed factors - use importance to determine direction
           else {
             if (importance > 50) {
-              syntheticCorrelation = (importance / 100) * 0.4; // Positive for high importance
+              syntheticCorrelation =
+                  (importance / 100) * 0.4; // Positive for high importance
             } else {
-              syntheticCorrelation = -1 * (importance / 100) * 0.3; // Negative for lower importance
+              syntheticCorrelation = -1 *
+                  (importance / 100) *
+                  0.3; // Negative for lower importance
             }
           }
-          
+
           correlation = syntheticCorrelation;
-          print('DEBUG: Generated synthetic correlation for $factor: $correlation (from importance: $importance)');
+          print(
+              'DEBUG: Generated synthetic correlation for $factor: $correlation (from importance: $importance)');
         }
-        
+
         processedFactors[factor] = {
           'correlation_with_stress': correlation,
           'importance_percentage': importance,
-          'is_synthetic': correlation != (data['correlation_with_stress'] as num?)?.toDouble(),
+          'is_synthetic': correlation !=
+              (data['correlation_with_stress'] as num?)?.toDouble(),
           'original_correlation': data['correlation_with_stress'],
         };
-        
-        print('DEBUG: Processed $factor: correlation=$correlation, importance=$importance');
+
+        print(
+            'DEBUG: Processed $factor: correlation=$correlation, importance=$importance');
       }
     });
-    
+
     // Now find factors using processed data
     processedFactors.forEach((factor, data) {
       final correlation = data['correlation_with_stress'] as double;
       final importance = data['importance_percentage'] as double;
-      
+
       // Look for meaningful data with very flexible thresholds
       if (importance > 0.1 || correlation.abs() > 0.001) {
-        print('DEBUG: Evaluating $factor for selection: correlation=$correlation, importance=$importance');
-        
+        print(
+            'DEBUG: Evaluating $factor for selection: correlation=$correlation, importance=$importance');
+
         if (correlation > maxPositiveCorrelation) {
           maxPositiveCorrelation = correlation;
           topIncreasingFactor = {
@@ -1316,7 +1409,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           };
           print('DEBUG: New top increasing factor: $factor (r=$correlation)');
         }
-        
+
         if (correlation < maxNegativeCorrelation) {
           maxNegativeCorrelation = correlation;
           topDecreasingFactor = {
@@ -1331,22 +1424,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
     });
-    
+
     // Backup logic: If we still don't have factors, use any available data
     if (topIncreasingFactor == null || topDecreasingFactor == null) {
       print('DEBUG: Primary selection failed, using backup logic...');
-      
+
       processedFactors.forEach((factor, data) {
         final correlation = data['correlation_with_stress'] as double;
         final importance = data['importance_percentage'] as double;
-        
-        if (topIncreasingFactor == null && (importance > 0 || correlation != 0)) {
+
+        if (topIncreasingFactor == null &&
+            (importance > 0 || correlation != 0)) {
           // Force positive correlation for increasing factor
           double finalCorrelation = correlation.abs();
           if (finalCorrelation == 0 && importance > 0) {
-            finalCorrelation = (importance / 100) * 0.35; // Generate from importance
+            finalCorrelation =
+                (importance / 100) * 0.35; // Generate from importance
           }
-          
+
           topIncreasingFactor = {
             'factor': factor,
             'display_name': _getFactorDisplayName(factor),
@@ -1355,16 +1450,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'is_real_data': true,
             'is_synthetic_correlation': true,
           };
-          print('DEBUG: Backup increasing factor: $factor (r=$finalCorrelation)');
+          print(
+              'DEBUG: Backup increasing factor: $factor (r=$finalCorrelation)');
         }
-        
-        if (topDecreasingFactor == null && (importance > 0 || correlation != 0)) {
+
+        if (topDecreasingFactor == null &&
+            (importance > 0 || correlation != 0)) {
           // Force negative correlation for decreasing factor
           double finalCorrelation = -correlation.abs();
           if (finalCorrelation == 0 && importance > 0) {
-            finalCorrelation = -1 * (importance / 100) * 0.3; // Generate from importance
+            finalCorrelation =
+                -1 * (importance / 100) * 0.3; // Generate from importance
           }
-          
+
           topDecreasingFactor = {
             'factor': factor,
             'display_name': _getFactorDisplayName(factor),
@@ -1373,14 +1471,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'is_real_data': true,
             'is_synthetic_correlation': true,
           };
-          print('DEBUG: Backup decreasing factor: $factor (r=$finalCorrelation)');
+          print(
+              'DEBUG: Backup decreasing factor: $factor (r=$finalCorrelation)');
         }
       });
     }
-    
+
     // Final fallback - only if NO data available at all
     if (topIncreasingFactor == null) {
-      print('DEBUG: Using complete fallback for increasing factor - no data found');
+      print(
+          'DEBUG: Using complete fallback for increasing factor - no data found');
       topIncreasingFactor = {
         'factor': 'workload',
         'display_name': 'Beban Kerja',
@@ -1390,11 +1490,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'is_synthetic_correlation': false,
       };
     } else {
-      print('DEBUG: Using processed data for increasing factor: ${topIncreasingFactor!['factor']} (r=${topIncreasingFactor!['correlation']})');
+      print(
+          'DEBUG: Using processed data for increasing factor: ${topIncreasingFactor!['factor']} (r=${topIncreasingFactor!['correlation']})');
     }
-    
+
     if (topDecreasingFactor == null) {
-      print('DEBUG: Using complete fallback for decreasing factor - no data found');
+      print(
+          'DEBUG: Using complete fallback for decreasing factor - no data found');
       topDecreasingFactor = {
         'factor': 'work_environment',
         'display_name': 'Lingkungan Kerja',
@@ -1404,36 +1506,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'is_synthetic_correlation': false,
       };
     } else {
-      print('DEBUG: Using processed data for decreasing factor: ${topDecreasingFactor!['factor']} (r=${topDecreasingFactor!['correlation']})');
+      print(
+          'DEBUG: Using processed data for decreasing factor: ${topDecreasingFactor!['factor']} (r=${topDecreasingFactor!['correlation']})');
     }
-    
+
     // Find dominant factor for interpretation using processed data
     String dominantFactor = '';
     double dominantImportance = 0.0;
-    
+
     processedFactors.forEach((factor, data) {
       final importance = data['importance_percentage'] as double;
       final correlation = data['correlation_with_stress'] as double;
-      
-      if (importance > dominantImportance || (importance == dominantImportance && correlation.abs() > 0)) {
+
+      if (importance > dominantImportance ||
+          (importance == dominantImportance && correlation.abs() > 0)) {
         dominantImportance = importance;
         dominantFactor = _getFactorDisplayName(factor);
       }
     });
-    
+
     if (dominantFactor.isEmpty || dominantImportance == 0) {
-      print('DEBUG: Using fallback for dominant factor - no processed data found');
+      print(
+          'DEBUG: Using fallback for dominant factor - no processed data found');
       dominantFactor = 'Beban Kerja';
       dominantImportance = 60.0;
     } else {
-      print('DEBUG: Using processed data for dominant factor: $dominantFactor ($dominantImportance%)');
+      print(
+          'DEBUG: Using processed data for dominant factor: $dominantFactor ($dominantImportance%)');
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Debug info removed per user request
-        
+
         // Faktor Peningkat Stres
         _buildDynamicFactorSection(
           icon: Icons.trending_up,
@@ -1443,8 +1549,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           isIncreasing: true,
         ),
         const SizedBox(height: 16),
-        
-        // Faktor Penurun Stres  
+
+        // Faktor Penurun Stres
         _buildDynamicFactorSection(
           icon: Icons.trending_down,
           iconColor: Colors.green.shade600,
@@ -1453,10 +1559,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           isIncreasing: false,
         ),
         const SizedBox(height: 16),
-        
+
         // Interpretasi organisasi dinamis
         Text(
-          _buildDynamicOrganizationalInterpretation(overallStress, dominantFactor, dominantImportance, (departmentCount as num?)?.toInt() ?? 0),
+          _buildDynamicOrganizationalInterpretation(
+              overallStress,
+              dominantFactor,
+              dominantImportance,
+              (departmentCount as num?)?.toInt() ?? 0),
           style: TextStyle(
             fontSize: 13,
             color: AppTheme.textPrimary,
@@ -1519,29 +1629,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  String _buildDynamicFactorDescription(Map<String, dynamic> factor, bool isIncreasing) {
+  String _buildDynamicFactorDescription(
+      Map<String, dynamic> factor, bool isIncreasing) {
     final displayName = factor['display_name'] as String;
     final correlation = factor['correlation'] as double;
     final importance = factor['importance'] as double;
     final factorName = factor['factor'] as String;
     final isRealData = factor['is_real_data'] as bool? ?? false;
-    final isSyntheticCorrelation = factor['is_synthetic_correlation'] as bool? ?? false;
-    
+    final isSyntheticCorrelation =
+        factor['is_synthetic_correlation'] as bool? ?? false;
+
     // Format r-value with proper precision
     final rValue = correlation.toStringAsFixed(2);
     final correlationStrength = _getCorrelationStrength(correlation);
-    
+
     // Debug: Print calculation details
     print('DEBUG: Factor description for $factorName:');
     print('  - correlation: $correlation');
     print('  - importance: $importance');
     print('  - isRealData: $isRealData');
     print('  - isSyntheticCorrelation: $isSyntheticCorrelation');
-    
+
     if (isIncreasing) {
       // Calculate impact percentage for increasing factors
       double impactPercentage;
-      
+
       if (isRealData && importance > 0) {
         // Use real data for calculation with enhanced scaling for synthetic correlations
         double dynamicScaling;
@@ -1552,87 +1664,111 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Standard scaling for real correlation data
           dynamicScaling = correlation.abs() > 0.1 ? 0.2 : 0.3;
         }
-        
-        impactPercentage = (correlation.abs() * importance * dynamicScaling).clamp(0.5, 20.0);
-        print('  - using real data calculation: ${correlation.abs()} * $importance * $dynamicScaling = $impactPercentage');
+
+        impactPercentage =
+            (correlation.abs() * importance * dynamicScaling).clamp(0.5, 20.0);
+        print(
+            '  - using real data calculation: ${correlation.abs()} * $importance * $dynamicScaling = $impactPercentage');
       } else if (isRealData && correlation.abs() > 0) {
         // Use correlation only if importance is not available
         impactPercentage = (correlation.abs() * 100 * 0.05).clamp(1.0, 10.0);
-        print('  - using correlation-only calculation: ${correlation.abs()} * 100 * 0.05 = $impactPercentage');
+        print(
+            '  - using correlation-only calculation: ${correlation.abs()} * 100 * 0.05 = $impactPercentage');
       } else {
         // Fallback calculation
-        impactPercentage = (correlation.abs() * importance * 0.15).clamp(1.0, 15.0);
-        print('  - using fallback calculation: ${correlation.abs()} * $importance * 0.15 = $impactPercentage');
+        impactPercentage =
+            (correlation.abs() * importance * 0.15).clamp(1.0, 15.0);
+        print(
+            '  - using fallback calculation: ${correlation.abs()} * $importance * 0.15 = $impactPercentage');
       }
-      
+
       final roundedImpact = impactPercentage.round();
-      
+
       String specificText = '';
       switch (factorName) {
         case 'workload':
-          specificText = 'Setiap 1 poin pada beban kerja meningkatkan tingkat stres sebesar $roundedImpact%.';
+          specificText =
+              'Setiap 1 poin pada beban kerja meningkatkan tingkat stres sebesar $roundedImpact%.';
           break;
         case 'work_life_balance':
-          specificText = 'Ketidakseimbangan ini berkontribusi meningkatkan stres sebesar $roundedImpact%.';
+          specificText =
+              'Ketidakseimbangan ini berkontribusi meningkatkan stres sebesar $roundedImpact%.';
           break;
         case 'team_conflict':
-          specificText = 'Setiap peningkatan konflik tim meningkatkan stres sebesar $roundedImpact%.';
+          specificText =
+              'Setiap peningkatan konflik tim meningkatkan stres sebesar $roundedImpact%.';
           break;
         case 'management_support':
-          specificText = 'Kurangnya dukungan manajemen meningkatkan stres sebesar $roundedImpact%.';
+          specificText =
+              'Kurangnya dukungan manajemen meningkatkan stres sebesar $roundedImpact%.';
           break;
         case 'work_environment':
-          specificText = 'Lingkungan kerja yang buruk meningkatkan stres sebesar $roundedImpact%.';
+          specificText =
+              'Lingkungan kerja yang buruk meningkatkan stres sebesar $roundedImpact%.';
           break;
         default:
-          specificText = 'Faktor ini meningkatkan tingkat stres sebesar $roundedImpact%.';
+          specificText =
+              'Faktor ini meningkatkan tingkat stres sebesar $roundedImpact%.';
       }
-      
+
       return '$displayName menunjukkan korelasi $correlationStrength (r=$rValue) dengan tingkat stres. $specificText';
     } else {
       // Calculate impact range for decreasing factors
       double baseImpact;
       double improvementPoints;
-      
+
       if (isRealData && importance > 0) {
         // Use real data for calculation with enhanced scaling for synthetic correlations
         double impactScaling = isSyntheticCorrelation ? 0.18 : 0.15;
         baseImpact = correlation.abs() * importance * impactScaling;
-        improvementPoints = (importance / 20).round().clamp(1, 5).toDouble(); // Based on importance
-        print('  - using real importance-based calculation: baseImpact=$baseImpact, improvements=$improvementPoints');
+        improvementPoints = (importance / 20)
+            .round()
+            .clamp(1, 5)
+            .toDouble(); // Based on importance
+        print(
+            '  - using real importance-based calculation: baseImpact=$baseImpact, improvements=$improvementPoints');
       } else if (isRealData && correlation.abs() > 0) {
         // Use correlation only if importance is not available
         baseImpact = correlation.abs() * 50; // Scale up correlation
-        improvementPoints = (3 / correlation.abs()).round().clamp(1, 5).toDouble();
-        print('  - using real correlation-based calculation: baseImpact=$baseImpact, improvements=$improvementPoints');
+        improvementPoints =
+            (3 / correlation.abs()).round().clamp(1, 5).toDouble();
+        print(
+            '  - using real correlation-based calculation: baseImpact=$baseImpact, improvements=$improvementPoints');
       } else {
         // Fallback calculation
         baseImpact = correlation.abs() * importance * 0.12;
-        improvementPoints = (3 / correlation.abs()).round().clamp(1, 5).toDouble();
-        print('  - using fallback calculation: baseImpact=$baseImpact, improvements=$improvementPoints');
+        improvementPoints =
+            (3 / correlation.abs()).round().clamp(1, 5).toDouble();
+        print(
+            '  - using fallback calculation: baseImpact=$baseImpact, improvements=$improvementPoints');
       }
-      
+
       final lowerImpact = (baseImpact * 0.7).clamp(0.5, 10.0);
       final upperImpact = (baseImpact * 1.3).clamp(1.0, 15.0);
-      
+
       String specificText = '';
       switch (factorName) {
         case 'work_environment':
-          specificText = 'Peningkatan ${improvementPoints.round()} poin pada faktor ini dapat menurunkan tingkat stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
+          specificText =
+              'Peningkatan ${improvementPoints.round()} poin pada faktor ini dapat menurunkan tingkat stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
           break;
         case 'management_support':
-          specificText = 'Peningkatan dukungan manajemen dapat menurunkan stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
+          specificText =
+              'Peningkatan dukungan manajemen dapat menurunkan stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
           break;
         case 'work_life_balance':
-          specificText = 'Perbaikan keseimbangan kerja dapat menurunkan stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
+          specificText =
+              'Perbaikan keseimbangan kerja dapat menurunkan stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
           break;
         case 'team_conflict':
-          specificText = 'Resolusi konflik yang efektif dapat menurunkan stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
+          specificText =
+              'Resolusi konflik yang efektif dapat menurunkan stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
           break;
         default:
-          specificText = 'Perbaikan faktor ini dapat menurunkan stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
+          specificText =
+              'Perbaikan faktor ini dapat menurunkan stres hingga ${lowerImpact.toStringAsFixed(1)} hingga ${upperImpact.toStringAsFixed(1)}%.';
       }
-      
+
       return '$displayName berkorelasi $correlationStrength (r=$rValue) dengan tingkat stres. $specificText';
     }
   }
@@ -1654,10 +1790,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  String _buildDynamicOrganizationalInterpretation(double stressLevel, String dominantFactor, double dominantImportance, int departmentCount) {
+  String _buildDynamicOrganizationalInterpretation(double stressLevel,
+      String dominantFactor, double dominantImportance, int departmentCount) {
     String stressCategory;
     String actionNeeded;
-    
+
     if (stressLevel <= 30) {
       stressCategory = 'rendah';
       actionNeeded = 'perlu monitoring berkelanjutan';
@@ -1671,15 +1808,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       stressCategory = 'sangat tinggi';
       actionNeeded = 'memerlukan intervensi darurat';
     }
-    
-    String interpretationText = 'Tingkat stres organisasi $stressCategory (${stressLevel.toStringAsFixed(2)}%) $actionNeeded.';
-    
-    if (dominantFactor.isNotEmpty && dominantImportance > 0 && departmentCount > 0) {
-      interpretationText += ' Berdasarkan analisis faktor dominan ($dominantFactor: ${dominantImportance.toStringAsFixed(0)}%) perlu fokus pada perbaikan aspek ini di seluruh $departmentCount departemen.';
+
+    String interpretationText =
+        'Tingkat stres organisasi $stressCategory (${stressLevel.toStringAsFixed(2)}%) $actionNeeded.';
+
+    if (dominantFactor.isNotEmpty &&
+        dominantImportance > 0 &&
+        departmentCount > 0) {
+      interpretationText +=
+          ' Berdasarkan analisis faktor dominan ($dominantFactor: ${dominantImportance.toStringAsFixed(0)}%) perlu fokus pada perbaikan aspek ini di seluruh $departmentCount departemen.';
     } else if (dominantFactor.isNotEmpty && dominantImportance > 0) {
-      interpretationText += ' Berdasarkan analisis faktor dominan ($dominantFactor: ${dominantImportance.toStringAsFixed(0)}%) perlu fokus pada perbaikan aspek ini di seluruh departemen.';
+      interpretationText +=
+          ' Berdasarkan analisis faktor dominan ($dominantFactor: ${dominantImportance.toStringAsFixed(0)}%) perlu fokus pada perbaikan aspek ini di seluruh departemen.';
     }
-    
+
     return interpretationText;
   }
 
@@ -1700,7 +1842,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    _dynamicRecommendations.isNotEmpty ? Icons.lightbulb : Icons.lightbulb_outline,
+                    _dynamicRecommendations.isNotEmpty
+                        ? Icons.lightbulb
+                        : Icons.lightbulb_outline,
                     color: Colors.amber.shade700,
                     size: 24,
                   ),
@@ -1708,7 +1852,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _dynamicRecommendations.isNotEmpty ? 'Rekomendasi' : 'Rekomendasi',
+                    _dynamicRecommendations.isNotEmpty
+                        ? 'Rekomendasi'
+                        : 'Rekomendasi',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -1721,15 +1867,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.amber.shade700),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.amber.shade700),
                     ),
                   ),
                 ],
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Loading state
             if (_isLoadingRecommendations) ...[
               Container(
@@ -1737,7 +1884,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   children: [
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.amber.shade700),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.amber.shade700),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -1797,11 +1945,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: _selectedDatasetId != null ? () => _fetchDynamicRecommendations(_selectedDatasetId!) : null,
+                      onPressed: _selectedDatasetId != null
+                          ? () =>
+                              _fetchDynamicRecommendations(_selectedDatasetId!)
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red.shade600,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                       ),
                       child: const Text(
                         'Coba Lagi',
@@ -1815,31 +1967,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Success state with recommendations
             else if (_dynamicRecommendations.isNotEmpty) ...[
               const SizedBox(height: 16),
-              
+
               // Dynamic recommendations
               ..._dynamicRecommendations.asMap().entries.map((entry) {
                 final index = entry.key;
                 final rec = entry.value;
-                
+
                 return Column(
                   children: [
                     _buildDynamicRecommendationItem(
                       title: rec['title'] ?? 'Rekomendasi ${index + 1}',
-                      description: rec['description'] ?? 'Deskripsi tidak tersedia',
+                      description:
+                          rec['description'] ?? 'Deskripsi tidak tersedia',
                       priority: rec['priority'] ?? 'medium',
                       urgency: rec['urgency'] ?? 'planned',
-                      steps: List<String>.from(rec['implementation_steps'] ?? []),
+                      steps:
+                          List<String>.from(rec['implementation_steps'] ?? []),
                       confidence: rec['confidence_score']?.toDouble() ?? 0.5,
                       category: rec['category'] ?? 'general',
                       departmentContext: rec['department_context'],
                     ),
-                    if (index < _dynamicRecommendations.length - 1) const SizedBox(height: 12),
+                    if (index < _dynamicRecommendations.length - 1)
+                      const SizedBox(height: 12),
                   ],
                 );
               }).toList(),
-              
+
               const SizedBox(height: 16),
-              
+
               // Info footer
               Container(
                 padding: const EdgeInsets.all(12),
@@ -1906,9 +2061,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Show sample static recommendations as fallback
               Text(
                 'Rekomendasi Umum:',
@@ -1918,27 +2073,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: AppTheme.textPrimary,
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               _buildSimpleRecommendationItem(
                 title: 'Atur Prioritas Tugas',
-                description: 'Gunakan metode Eisenhower Matrix untuk mengategorikan tugas berdasarkan urgensi dan kepentingan.',
+                description:
+                    'Gunakan metode Eisenhower Matrix untuk mengategorikan tugas berdasarkan urgensi dan kepentingan.',
                 priority: 'High',
                 steps: [
                   'Identifikasi tugas berdasarkan tingkat urgensi dan kepentingan',
-                  'Buat daftar prioritas harian menggunakan metode Eisenhower Matrix', 
+                  'Buat daftar prioritas harian menggunakan metode Eisenhower Matrix',
                   'Delegasikan tugas yang bisa dikerjakan orang lain',
                   'Fokus pada maksimal 3 tugas utama per hari',
                   'Review dan evaluasi prioritas setiap minggu'
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               _buildSimpleRecommendationItem(
-                title: 'Perbaiki Work-Life Balance',
-                description: 'Tetapkan batasan waktu kerja yang jelas dan konsisten untuk keseimbangan hidup.',
+                title: 'Perbaiki Ketegangan dan Kesimbangan Kerja',
+                description:
+                    'Tetapkan batasan waktu kerja yang jelas dan konsisten untuk keseimbangan hidup.',
                 priority: 'Medium',
                 steps: [
                   'Tetapkan batasan waktu kerja yang jelas dan konsisten',
@@ -1975,7 +2132,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       default:
         priorityColor = Colors.blue;
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -2016,9 +2173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-          
           const SizedBox(height: 8),
-          
           Text(
             description,
             style: TextStyle(
@@ -2027,9 +2182,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               height: 1.4,
             ),
           ),
-          
           const SizedBox(height: 12),
-          
           Text(
             'Langkah Implementasi:',
             style: TextStyle(
@@ -2038,13 +2191,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: AppTheme.textPrimary,
             ),
           ),
-          
           const SizedBox(height: 8),
-          
           ...steps.asMap().entries.map((entry) {
             final index = entry.key;
             final step = entry.value;
-            
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
@@ -2100,7 +2251,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     Color priorityColor;
     IconData priorityIcon;
-    
+
     switch (priority.toLowerCase()) {
       case 'high':
         priorityColor = Colors.red;
@@ -2118,10 +2269,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         priorityColor = Colors.blue;
         priorityIcon = Icons.info;
     }
-    
+
     Color urgencyColor;
     String urgencyText;
-    
+
     switch (urgency.toLowerCase()) {
       case 'immediate':
         urgencyColor = Colors.red;
@@ -2139,7 +2290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         urgencyColor = Colors.grey;
         urgencyText = urgency;
     }
-    
+
     IconData categoryIcon;
     switch (category.toLowerCase()) {
       case 'workload':
@@ -2163,7 +2314,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       default:
         categoryIcon = Icons.lightbulb;
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -2236,9 +2387,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-          
           const SizedBox(height: 8),
-          
           Text(
             description,
             style: TextStyle(
@@ -2247,11 +2396,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               height: 1.4,
             ),
           ),
-          
           const SizedBox(height: 8),
-          
           const SizedBox(height: 8),
-          
           if (departmentContext != null) ...[
             const SizedBox(height: 8),
             Container(
@@ -2283,10 +2429,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ],
-          
           if (steps.isNotEmpty) ...[
             const SizedBox(height: 12),
-            
             Text(
               'Langkah Implementasi:',
               style: TextStyle(
@@ -2295,13 +2439,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: AppTheme.textPrimary,
               ),
             ),
-            
             const SizedBox(height: 8),
-            
             ...steps.asMap().entries.map((entry) {
               final index = entry.key;
               final step = entry.value;
-              
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
@@ -2351,7 +2493,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'workload':
         return 'Beban Kerja';
       case 'work_life_balance':
-        return 'Work-Life Balance';
+        return 'Ketegangan dan Kesimbangan Kerja';
       case 'team_conflict':
         return 'Konflik Tim';
       case 'management_support':
@@ -2385,7 +2527,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return AlertDialog(
           title: const Text('Tingkat Stres'),
           content: const Text(
-            'Tingkat stres dihitung berdasarkan analisis dari berbagai faktor seperti beban kerja, work-life balance, konflik tim, dukungan manajemen, dan lingkungan kerja.\n\n'
+            'Tingkat stres dihitung berdasarkan analisis dari berbagai faktor seperti beban kerja, Ketegangan dan Kesimbangan Kerja, konflik tim, dukungan manajemen, dan lingkungan kerja.\n\n'
             '• 0-30%: Stres Rendah\n'
             '• 31-60%: Stres Sedang\n'
             '• 61-100%: Stres Tinggi',
@@ -2423,34 +2565,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (token != null) {
         print('🔄 Fetching dynamic recommendations for dataset $datasetId...');
-        
+
         final result = await AuthApiService.getDatasetRecommendations(
           token: token,
           datasetId: int.parse(datasetId),
         );
 
         if (result['success'] == true && mounted) {
-          final recommendations = List<Map<String, dynamic>>.from(result['recommendations'] ?? []);
-          
+          final recommendations =
+              List<Map<String, dynamic>>.from(result['recommendations'] ?? []);
+
           setState(() {
             _dynamicRecommendations = recommendations;
             _isLoadingRecommendations = false;
           });
 
-          print('✅ Successfully fetched ${recommendations.length} dynamic recommendations');
-          
+          print(
+              '✅ Successfully fetched ${recommendations.length} dynamic recommendations');
+
           // Log recommendation details for debugging
           for (int i = 0; i < recommendations.length; i++) {
             final rec = recommendations[i];
-            print('📋 Recommendation ${i + 1}: ${rec['title']} (${rec['priority']}, ${rec['urgency']})');
+            print(
+                '📋 Recommendation ${i + 1}: ${rec['title']} (${rec['priority']}, ${rec['urgency']})');
           }
-          
         } else {
           setState(() {
-            _recommendationsError = result['message'] ?? 'Failed to fetch recommendations';
+            _recommendationsError =
+                result['message'] ?? 'Failed to fetch recommendations';
             _isLoadingRecommendations = false;
           });
-          
+
           print('❌ Failed to fetch recommendations: ${result['message']}');
         }
       } else {
@@ -2464,8 +2609,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _recommendationsError = 'Error: ${e.toString()}';
         _isLoadingRecommendations = false;
       });
-      
+
       print('❌ Exception while fetching recommendations: ${e.toString()}');
     }
   }
-} 
+}

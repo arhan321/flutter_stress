@@ -1,7 +1,7 @@
 class AppConstants {
   // App Information
-  static const String appName = 'Analisis Stres Karyawan';
-  static const String companyName = 'Acme Inc.';
+  static const String appName = 'Workplaze Stylizer';
+  static const String companyName = 'Workplace Stress Analyzer';
   static const String appVersion = '1.0.0';
 
   // API Configuration

@@ -5,23 +5,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthApiService {
   static const String baseUrl = AppConstants.baseUrl;
-  
+
   // Persistent storage keys
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
   static const String _isLoggedInKey = 'is_logged_in';
   static const String _loginTimestampKey = 'login_timestamp';
-  
+
   // Token expiry duration (7 days)
   static const Duration _tokenExpiry = Duration(days: 7);
 
   // Mock token for development - replace with real authentication
   static String? _authToken;
-  
+
   static Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-  };
+        'Content-Type': 'application/json',
+        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+      };
 
   // Set auth token (for mock purposes)
   static void setAuthToken(String token) {
@@ -32,10 +32,10 @@ class AuthApiService {
   static Future<Map<String, dynamic>> mockLogin() async {
     // Simulate API delay
     await Future.delayed(const Duration(seconds: 1));
-    
+
     // Set mock token
     _authToken = 'mock-jwt-token-for-development';
-    
+
     return {
       'success': true,
       'token': _authToken,
@@ -56,56 +56,58 @@ class AuthApiService {
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       await prefs.setString(_tokenKey, token);
       await prefs.setString(_userKey, json.encode(userData));
       await prefs.setBool(_isLoggedInKey, true);
-      await prefs.setInt(_loginTimestampKey, DateTime.now().millisecondsSinceEpoch);
-      
+      await prefs.setInt(
+          _loginTimestampKey, DateTime.now().millisecondsSinceEpoch);
+
       print('✅ User session saved to persistent storage');
     } catch (e) {
       print('❌ Error saving user session: $e');
     }
   }
-  
+
   // Load user session from persistent storage
   static Future<Map<String, dynamic>?> loadUserSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
       if (!isLoggedIn) {
         print('📱 No saved login session found');
         return null;
       }
-      
+
       final token = prefs.getString(_tokenKey);
       final userDataString = prefs.getString(_userKey);
       final loginTimestamp = prefs.getInt(_loginTimestampKey);
-      
+
       if (token == null || userDataString == null || loginTimestamp == null) {
         print('⚠️ Incomplete session data, clearing storage');
         await clearUserSession();
         return null;
       }
-      
+
       // Check if token is expired
       final loginTime = DateTime.fromMillisecondsSinceEpoch(loginTimestamp);
       final now = DateTime.now();
       final timeDifference = now.difference(loginTime);
-      
+
       if (timeDifference > _tokenExpiry) {
         print('⏰ Session expired, clearing storage');
         await clearUserSession();
         return null;
       }
-      
+
       final userData = json.decode(userDataString) as Map<String, dynamic>;
       userData['token'] = token;
-      
+
       print('✅ Loaded user session from persistent storage');
-      print('👤 User: ${userData['username']} (expires in ${_tokenExpiry - timeDifference})');
-      
+      print(
+          '👤 User: ${userData['username']} (expires in ${_tokenExpiry - timeDifference})');
+
       return userData;
     } catch (e) {
       print('❌ Error loading user session: $e');
@@ -113,37 +115,38 @@ class AuthApiService {
       return null;
     }
   }
-  
+
   // Clear user session from persistent storage
   static Future<void> clearUserSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       await prefs.remove(_tokenKey);
       await prefs.remove(_userKey);
       await prefs.remove(_isLoggedInKey);
       await prefs.remove(_loginTimestampKey);
-      
+
       print('🗑️ User session cleared from persistent storage');
     } catch (e) {
       print('❌ Error clearing user session: $e');
     }
   }
-  
+
   // Check if user has valid saved session
   static Future<bool> hasValidSession() async {
     final session = await loadUserSession();
     return session != null;
   }
-  
+
   // Update session timestamp (extend session)
   static Future<void> extendSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
-      
+
       if (isLoggedIn) {
-        await prefs.setInt(_loginTimestampKey, DateTime.now().millisecondsSinceEpoch);
+        await prefs.setInt(
+            _loginTimestampKey, DateTime.now().millisecondsSinceEpoch);
         print('🔄 Session extended');
       }
     } catch (e) {
@@ -175,9 +178,9 @@ class AuthApiService {
           'position': position,
         }),
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 201) {
         return {
           'success': true,
@@ -197,7 +200,7 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Login user
   static Future<Map<String, dynamic>> loginUser({
     required String usernameOrEmail,
@@ -214,19 +217,19 @@ class AuthApiService {
           'password': password,
         }),
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         // Save session to persistent storage on successful login
         final token = data['token'] as String;
         final userData = data['user'] as Map<String, dynamic>;
-        
+
         await saveUserSession(
           token: token,
           userData: userData,
         );
-        
+
         return {
           'success': true,
           'message': data['message'] ?? 'Login successful',
@@ -247,7 +250,7 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Get user profile
   static Future<Map<String, dynamic>> getUserProfile(String token) async {
     try {
@@ -258,9 +261,9 @@ class AuthApiService {
           'Content-Type': 'application/json',
         },
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -279,7 +282,7 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Change password
   static Future<Map<String, dynamic>> changePassword({
     required String token,
@@ -300,9 +303,9 @@ class AuthApiService {
           'confirm_password': confirmPassword,
         }),
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -321,7 +324,7 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Update profile
   static Future<Map<String, dynamic>> updateProfile({
     required String token,
@@ -332,7 +335,7 @@ class AuthApiService {
   }) async {
     try {
       final Map<String, dynamic> updateData = {};
-      
+
       if (fullName != null && fullName.isNotEmpty) {
         updateData['full_name'] = fullName;
       }
@@ -345,7 +348,7 @@ class AuthApiService {
       if (phoneNumber != null) {
         updateData['phone_number'] = phoneNumber;
       }
-      
+
       final response = await http.put(
         Uri.parse('$baseUrl/api/user/update-profile'),
         headers: {
@@ -354,9 +357,9 @@ class AuthApiService {
         },
         body: json.encode(updateData),
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -376,7 +379,7 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Logout user
   static Future<Map<String, dynamic>> logoutUser({
     required String token,
@@ -387,22 +390,22 @@ class AuthApiService {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       };
-      
+
       if (sessionToken != null) {
         headers['Session-Token'] = sessionToken;
       }
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/logout'),
         headers: headers,
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         // Clear session from persistent storage on successful logout
         await clearUserSession();
-        
+
         return {
           'success': true,
           'message': data['message'] ?? 'Logout successful',
@@ -416,14 +419,14 @@ class AuthApiService {
     } catch (e) {
       // Clear session anyway if there's a network error during logout
       await clearUserSession();
-      
+
       return {
         'success': false,
         'message': 'Network error: ${e.toString()}',
       };
     }
   }
-  
+
   // Upload dataset
   static Future<Map<String, dynamic>> uploadDataset({
     required String token,
@@ -438,10 +441,10 @@ class AuthApiService {
         'POST',
         Uri.parse('$baseUrl/api/upload-dataset'),
       );
-      
+
       // Add headers
       request.headers['Authorization'] = 'Bearer $token';
-      
+
       // Add file - handle both path and bytes
       if (fileBytes != null) {
         // For web platform - use bytes
@@ -459,7 +462,7 @@ class AuthApiService {
           'message': 'No file data provided',
         };
       }
-      
+
       // Add form fields
       if (datasetName != null && datasetName.isNotEmpty) {
         request.fields['dataset_name'] = datasetName;
@@ -467,11 +470,11 @@ class AuthApiService {
       if (description != null && description.isNotEmpty) {
         request.fields['description'] = description;
       }
-      
+
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       final data = json.decode(responseBody);
-      
+
       if (response.statusCode == 201) {
         return {
           'success': true,
@@ -491,37 +494,40 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Get datasets list
   static Future<Map<String, dynamic>> getDatasets({String? token}) async {
-    print('🔄 AuthApiService.getDatasets called with token: ${token != null ? 'present' : 'null'}');
-    
+    print(
+        '🔄 AuthApiService.getDatasets called with token: ${token != null ? 'present' : 'null'}');
+
     try {
       final headers = {'Content-Type': 'application/json'};
-      
+
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
         print('🔐 Authorization header added');
       }
-      
+
       print('📡 Making GET request to: $baseUrl/api/datasets');
-      
-      final response = await http.get(
+
+      final response = await http
+          .get(
         Uri.parse('$baseUrl/api/datasets'),
         headers: headers,
-      ).timeout(
+      )
+          .timeout(
         const Duration(seconds: 15), // Increase timeout
         onTimeout: () {
           print('❌ Request timeout after 15 seconds');
           throw Exception('Request timeout - server may not be running');
         },
       );
-      
+
       print('📊 Response status: ${response.statusCode}');
       print('📋 Response body: ${response.body}');
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         print('✅ Datasets fetched successfully');
         return {
@@ -538,25 +544,26 @@ class AuthApiService {
       }
     } catch (e) {
       print('❌ Network error in getDatasets: ${e.toString()}');
-      
+
       // Provide more specific error messages
       String errorMessage;
-      if (e.toString().contains('Connection refused') || 
+      if (e.toString().contains('Connection refused') ||
           e.toString().contains('Failed to establish a new connection')) {
-        errorMessage = 'Server is not running. Please start the backend server.';
+        errorMessage =
+            'Server is not running. Please start the backend server.';
       } else if (e.toString().contains('timeout')) {
         errorMessage = 'Request timeout. Server may be slow or not responding.';
       } else {
         errorMessage = 'Network error: ${e.toString()}';
       }
-      
+
       return {
         'success': false,
         'message': errorMessage,
       };
     }
   }
-  
+
   // Analyze dataset
   static Future<Map<String, dynamic>> analyzeDataset({
     required String token,
@@ -570,9 +577,9 @@ class AuthApiService {
           'Content-Type': 'application/json',
         },
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -592,7 +599,7 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Analyze dataset with enhanced ML models
   static Future<Map<String, dynamic>> analyzeDatasetEnhanced({
     required String token,
@@ -606,9 +613,9 @@ class AuthApiService {
           'Content-Type': 'application/json',
         },
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -628,15 +635,16 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Perform enhanced analysis (alias for analyzeDatasetEnhanced)
   static Future<Map<String, dynamic>> performEnhancedAnalysis({
     required String token,
     required int datasetId,
   }) async {
     try {
-      print('🤖 Starting Enhanced Deep Learning Analysis for dataset $datasetId...');
-      
+      print(
+          '🤖 Starting Enhanced Deep Learning Analysis for dataset $datasetId...');
+
       final response = await http.post(
         Uri.parse('$baseUrl/api/enhanced-analysis/$datasetId'),
         headers: {
@@ -648,22 +656,24 @@ class AuthApiService {
       print('🧠 Deep Learning API Response Status: ${response.statusCode}');
 
       final Map<String, dynamic> responseData = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         print('✅ Deep Learning Analysis Successful');
-        print('📊 Recommendations count: ${responseData['recommendations']?.length ?? 0}');
+        print(
+            '📊 Recommendations count: ${responseData['recommendations']?.length ?? 0}');
         print('🎯 Analysis type: ${responseData['analysis_type']}');
-        
+
         // Log neural network performance
         final summary = responseData['summary'];
         if (summary != null) {
           print('🧠 Neural Network Results:');
           print('   • Overall Stress: ${summary['overall_stress_level']}%');
-          print('   • Confidence Score: ${(summary['confidence_score'] * 100).toStringAsFixed(1)}%');
+          print(
+              '   • Confidence Score: ${(summary['confidence_score'] * 100).toStringAsFixed(1)}%');
           print('   • Stress Category: ${summary['stress_category']}');
           print('   • Total Employees: ${summary['total_employees']}');
         }
-        
+
         // Log implementation steps generation
         final recommendations = responseData['recommendations'] as List?;
         if (recommendations != null) {
@@ -674,7 +684,7 @@ class AuthApiService {
           }
           print('📋 Dynamic Implementation Steps Generated: $totalSteps total');
         }
-        
+
         return responseData;
       } else {
         print('❌ Deep Learning Analysis Failed: ${response.statusCode}');
@@ -688,11 +698,12 @@ class AuthApiService {
       print('💥 Deep Learning Analysis Exception: ${e.toString()}');
       return {
         'success': false,
-        'message': 'Network error during deep learning analysis: ${e.toString()}',
+        'message':
+            'Network error during deep learning analysis: ${e.toString()}',
       };
     }
   }
-  
+
   // Delete dataset
   static Future<Map<String, dynamic>> deleteDataset({
     required String token,
@@ -706,9 +717,9 @@ class AuthApiService {
           'Content-Type': 'application/json',
         },
       );
-      
+
       final data = json.decode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -727,7 +738,7 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Test server connection
   static Future<bool> testConnection() async {
     try {
@@ -735,20 +746,20 @@ class AuthApiService {
         Uri.parse('$baseUrl/api/health'),
         headers: {'Content-Type': 'application/json'},
       ).timeout(const Duration(seconds: 5));
-      
+
       return response.statusCode == 200;
     } catch (e) {
       return false;
     }
   }
-  
+
   // Download dataset template
   static Future<Map<String, dynamic>> downloadTemplate() async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/download-template'),
       );
-      
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -773,25 +784,28 @@ class AuthApiService {
   static String _extractFilenameFromResponse(http.Response response) {
     // Try to extract filename from Content-Disposition header
     final contentDisposition = response.headers['content-disposition'];
-    if (contentDisposition != null && contentDisposition.contains('filename=')) {
-      final filenameMatch = RegExp(r'filename="?([^"]+)"?').firstMatch(contentDisposition);
+    if (contentDisposition != null &&
+        contentDisposition.contains('filename=')) {
+      final filenameMatch =
+          RegExp(r'filename="?([^"]+)"?').firstMatch(contentDisposition);
       if (filenameMatch != null) {
         return filenameMatch.group(1) ?? 'stress_dataset_template.csv';
       }
     }
-    
+
     // Default filename with timestamp
-    final timestamp = DateTime.now().toIso8601String().split('T')[0].replaceAll('-', '');
+    final timestamp =
+        DateTime.now().toIso8601String().split('T')[0].replaceAll('-', '');
     return 'stress_dataset_template_$timestamp.csv';
   }
-  
+
   // Get dynamic recommendations for a specific dataset
   static Future<Map<String, dynamic>> getDatasetRecommendations({
     required String token,
     required int datasetId,
   }) async {
     print('🔄 Getting dynamic recommendations for dataset $datasetId...');
-    
+
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/dataset/$datasetId/recommendations'),
@@ -812,10 +826,11 @@ class AuthApiService {
       if (response.statusCode == 200) {
         try {
           final responseData = json.decode(response.body);
-          
+
           print('✅ Dynamic recommendations retrieved successfully');
-          print('💡 Recommendations count: ${responseData['recommendations']?.length ?? 0}');
-          
+          print(
+              '💡 Recommendations count: ${responseData['recommendations']?.length ?? 0}');
+
           return {
             'success': true,
             'dataset_id': responseData['dataset_id'],
@@ -826,8 +841,9 @@ class AuthApiService {
             'message': 'Dynamic recommendations retrieved successfully',
           };
         } catch (jsonError) {
-          print('❌ JSON parsing error for recommendations: ${jsonError.toString()}');
-          
+          print(
+              '❌ JSON parsing error for recommendations: ${jsonError.toString()}');
+
           return {
             'success': false,
             'message': 'Server returned invalid recommendation data format.',
@@ -836,33 +852,36 @@ class AuthApiService {
         }
       } else {
         print('❌ Server returned error: ${response.statusCode}');
-        
+
         try {
           final errorData = json.decode(response.body);
           return {
             'success': false,
-            'message': errorData['error'] ?? 'Failed to get dataset recommendations',
+            'message':
+                errorData['error'] ?? 'Failed to get dataset recommendations',
           };
         } catch (e) {
           return {
             'success': false,
-            'message': 'Server error: ${response.statusCode}. Please try again.',
+            'message':
+                'Server error: ${response.statusCode}. Please try again.',
           };
         }
       }
     } catch (e) {
       print('❌ Network error in getDatasetRecommendations: ${e.toString()}');
-      
+
       String errorMessage;
-      if (e.toString().contains('Connection refused') || 
+      if (e.toString().contains('Connection refused') ||
           e.toString().contains('Failed to establish a new connection')) {
-        errorMessage = 'Cannot connect to server. Please check your connection and ensure the backend is running.';
+        errorMessage =
+            'Cannot connect to server. Please check your connection and ensure the backend is running.';
       } else if (e.toString().contains('timeout')) {
         errorMessage = 'Request timeout while generating recommendations.';
       } else {
         errorMessage = 'Network error: ${e.toString()}';
       }
-      
+
       return {
         'success': false,
         'message': errorMessage,
@@ -870,14 +889,14 @@ class AuthApiService {
       };
     }
   }
-  
+
   // Get basic analysis for a specific dataset
   static Future<Map<String, dynamic>> getDatasetBasicAnalysis({
     required String token,
     required int datasetId,
   }) async {
     print('🔄 Getting basic analysis for dataset $datasetId...');
-    
+
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/dataset/$datasetId/basic-analysis'),
@@ -886,10 +905,12 @@ class AuthApiService {
           'Content-Type': 'application/json',
         },
       ).timeout(
-        const Duration(seconds: 30), // Extended timeout for deep learning processing
+        const Duration(
+            seconds: 30), // Extended timeout for deep learning processing
         onTimeout: () {
           print('❌ Analysis request timeout after 30 seconds');
-          throw Exception('Analisis membutuhkan waktu lebih lama - server sedang memproses data besar');
+          throw Exception(
+              'Analisis membutuhkan waktu lebih lama - server sedang memproses data besar');
         },
       );
 
@@ -900,20 +921,21 @@ class AuthApiService {
         try {
           // Check for common JSON parsing issues before attempting to decode
           final responseBody = response.body;
-          
+
           // Check for NaN values in the response string
           if (responseBody.contains('NaN') || responseBody.contains('null')) {
-            print('⚠️  Response contains NaN or null values, attempting to clean...');
+            print(
+                '⚠️  Response contains NaN or null values, attempting to clean...');
             // Try to clean the response
             final cleanedBody = responseBody
                 .replaceAll('NaN', '0.0')
                 .replaceAll('"null"', 'null')
                 .replaceAll(': null,', ': 0.0,')
                 .replaceAll(': null}', ': 0.0}');
-            
+
             print('🔧 Cleaned response, attempting to parse...');
             final responseData = json.decode(cleanedBody);
-            
+
             return {
               'success': true,
               'dataset_info': responseData['dataset_info'],
@@ -925,9 +947,9 @@ class AuthApiService {
           } else {
             // Normal parsing
             final responseData = json.decode(responseBody);
-            
+
             print('✅ Analysis data retrieved successfully');
-            
+
             return {
               'success': true,
               'dataset_info': responseData['dataset_info'],
@@ -939,17 +961,19 @@ class AuthApiService {
           }
         } catch (jsonError) {
           print('❌ JSON parsing error: ${jsonError.toString()}');
-          print('📋 Raw response (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
-          
+          print(
+              '📋 Raw response (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
+
           return {
             'success': false,
-            'message': 'Server returned invalid data format. Please try refreshing or contact support.',
+            'message':
+                'Server returned invalid data format. Please try refreshing or contact support.',
             'technical_error': jsonError.toString(),
           };
         }
       } else {
         print('❌ Server returned error: ${response.statusCode}');
-        
+
         try {
           final errorData = json.decode(response.body);
           return {
@@ -959,26 +983,31 @@ class AuthApiService {
         } catch (e) {
           return {
             'success': false,
-            'message': 'Server error: ${response.statusCode}. Please try again.',
+            'message':
+                'Server error: ${response.statusCode}. Please try again.',
           };
         }
       }
     } catch (e) {
       print('❌ Network error in getDatasetBasicAnalysis: ${e.toString()}');
-      
+
       // Provide more specific error messages
       String errorMessage;
-      if (e.toString().contains('Connection refused') || 
+      if (e.toString().contains('Connection refused') ||
           e.toString().contains('Failed to establish a new connection')) {
-        errorMessage = 'Cannot connect to server. Please check your connection and ensure the backend is running.';
+        errorMessage =
+            'Cannot connect to server. Please check your connection and ensure the backend is running.';
       } else if (e.toString().contains('timeout')) {
-        errorMessage = 'Analisis membutuhkan waktu lebih lama. Server sedang memproses dataset Anda.';
-      } else if (e.toString().contains('FormatException') || e.toString().contains('JSON')) {
-        errorMessage = 'Server mengembalikan data tidak valid. Coba upload dataset baru atau hubungi dukungan.';
+        errorMessage =
+            'Analisis membutuhkan waktu lebih lama. Server sedang memproses dataset Anda.';
+      } else if (e.toString().contains('FormatException') ||
+          e.toString().contains('JSON')) {
+        errorMessage =
+            'Server mengembalikan data tidak valid. Coba upload dataset baru atau hubungi dukungan.';
       } else {
         errorMessage = 'Error jaringan: ${e.toString()}';
       }
-      
+
       return {
         'success': false,
         'message': errorMessage,
@@ -990,7 +1019,7 @@ class AuthApiService {
   // Get employees from specific dataset
   static Future<Map<String, dynamic>> getDatasetEmployees(int datasetId) async {
     print('🔄 Getting employees from dataset $datasetId...');
-    
+
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/dataset/$datasetId/employees'),
@@ -1009,7 +1038,8 @@ class AuthApiService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('✅ Successfully loaded ${data['total_employees']} employees from ${data['dataset_name']}');
+        print(
+            '✅ Successfully loaded ${data['total_employees']} employees from ${data['dataset_name']}');
         return data;
       } else {
         print('❌ Failed to load employees: ${response.statusCode}');
@@ -1017,7 +1047,7 @@ class AuthApiService {
       }
     } catch (e) {
       print('💥 Error loading employees: ${e.toString()}');
-      
+
       // Return mock data for development if API fails
       print('🔄 Falling back to mock data...');
       await Future.delayed(const Duration(seconds: 1));
@@ -1073,21 +1103,26 @@ class AuthApiService {
   }
 
   // Analyze individual employee
-  static Future<Map<String, dynamic>> analyzeEmployee(int datasetId, String employeeId) async {
+  static Future<Map<String, dynamic>> analyzeEmployee(
+      int datasetId, String employeeId) async {
     print('🔄 Analyzing employee $employeeId from dataset $datasetId...');
-    
+
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/dataset/$datasetId/employee/$employeeId/analyze'),
+      final response = await http
+          .post(
+        Uri.parse(
+            '$baseUrl/api/dataset/$datasetId/employee/$employeeId/analyze'),
         headers: {
           'Content-Type': 'application/json',
         },
         body: json.encode({}),
-      ).timeout(
+      )
+          .timeout(
         const Duration(seconds: 30),
         onTimeout: () {
           print('❌ Analysis timeout after 30 seconds');
-          throw Exception('Analysis timeout - complex analysis taking too long');
+          throw Exception(
+              'Analysis timeout - complex analysis taking too long');
         },
       );
 
@@ -1095,7 +1130,8 @@ class AuthApiService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('✅ Successfully analyzed employee ${data['employee_info']['name']}');
+        print(
+            '✅ Successfully analyzed employee ${data['employee_info']['name']}');
         print('📈 Stress Level: ${data['stress_analysis']['stress_level']}%');
         print('🎯 Risk Factors: ${data['risk_factors'].length}');
         return data;
@@ -1105,7 +1141,7 @@ class AuthApiService {
       }
     } catch (e) {
       print('💥 Error analyzing employee: ${e.toString()}');
-      
+
       // Return mock analysis for development if API fails
       print('🔄 Falling back to mock analysis...');
       await Future.delayed(const Duration(seconds: 2));
@@ -1142,7 +1178,7 @@ class AuthApiService {
             'recommendation': 'Redistributions tugas dan optimalisasi workflow'
           },
           {
-            'factor': 'Work-Life Balance',
+            'factor': 'Ketegangan dan Kesimbangan Kerja',
             'value': 6.2,
             'impact': 'Medium',
             'recommendation': 'Berikan pelatihan time management'
@@ -1167,12 +1203,23 @@ class AuthApiService {
           },
         ],
         'similar_profiles': [
-          {'employee_id': 'EMP004', 'department': 'IT', 'stress_level': 67.2, 'similarity': 89.2},
-          {'employee_id': 'EMP005', 'department': 'IT', 'stress_level': 63.8, 'similarity': 84.7},
+          {
+            'employee_id': 'EMP004',
+            'department': 'IT',
+            'stress_level': 67.2,
+            'similarity': 89.2
+          },
+          {
+            'employee_id': 'EMP005',
+            'department': 'IT',
+            'stress_level': 63.8,
+            'similarity': 84.7
+          },
         ],
         'analysis_timestamp': DateTime.now().toIso8601String(),
-        'recommendations_summary': 'Berdasarkan analisis, karyawan ini memiliki tingkat stres medium dengan skor 65.3%. Fokus utama intervensi pada faktor dengan dampak tinggi.'
+        'recommendations_summary':
+            'Berdasarkan analisis, karyawan ini memiliki tingkat stres medium dengan skor 65.3%. Fokus utama intervensi pada faktor dengan dampak tinggi.'
       };
     }
   }
-} 
+}

@@ -13,21 +13,22 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
+class _AuthScreenState extends State<AuthScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _loginFormKey = GlobalKey<FormState>();
   final _registerFormKey = GlobalKey<FormState>();
-  
+
   // Login controllers
   final _loginEmailController = TextEditingController();
   final _loginPasswordController = TextEditingController();
-  
+
   // Register controllers
   final _registerNameController = TextEditingController();
   final _registerEmailController = TextEditingController();
   final _registerCompanyController = TextEditingController();
   final _registerPasswordController = TextEditingController();
-  
+
   bool _isLoginLoading = false;
   bool _isRegisterLoading = false;
   bool _obscureLoginPassword = true;
@@ -58,38 +59,129 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
+      // body: SafeArea(
+      //   child: SingleChildScrollView(
+      //     child: Padding(
+      //       padding: const EdgeInsets.all(24.0),
+      //       child: Column(
+      //         crossAxisAlignment: CrossAxisAlignment.start,
+      //         children: [
+      //           const SizedBox(height: 40),
+      //           // LOGO
+      //           Center(
+      //             child: Container(
+      //               width: 140, // ukuran lingkaran lebih besar
+      //               height: 140,
+      //               decoration: BoxDecoration(
+      //                 shape: BoxShape.circle,
+      //                 color: Colors.white,
+      //                 boxShadow: [
+      //                   BoxShadow(
+      //                     color: Colors.black12,
+      //                     blurRadius: 10,
+      //                     spreadRadius: 2,
+      //                   ),
+      //                 ],
+      //               ),
+      //               child: ClipOval(
+      //                 child: Image.asset(
+      //                   'asset/images/LWS.png',
+      //                   fit: BoxFit.cover,
+      //                 ),
+      //               ),
+      //             ),
+      //           ),
+      //           const SizedBox(height: 32),
+
+      //           // Header
+      //           _buildHeader(),
+
+      //           const SizedBox(height: 32),
+
+      //           // Tab Bar
+      //           _buildTabBar(),
+
+      //           const SizedBox(height: 24),
+
+      //           // Tab Content
+      //           SizedBox(
+      //             height: MediaQuery.of(context).size.height * 0.6,
+      //             child: TabBarView(
+      //               controller: _tabController,
+      //               children: [
+      //                 _buildLoginForm(),
+      //                 _buildRegisterForm(),
+      //               ],
+      //             ),
+      //           ),
+      //         ],
+      //       ),
+      //     ),
+      //   ),
+      // ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                
-                // Header
-                _buildHeader(),
-                
-                const SizedBox(height: 32),
-                
-                // Tab Bar
-                _buildTabBar(),
-                
-                const SizedBox(height: 24),
-                
-                // Tab Content
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildLoginForm(),
-                      _buildRegisterForm(),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+
+              // Logo (tidak usah di-scroll)
+              Center(
+                child: Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
                     ],
                   ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'asset/images/LWS.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 24),
+
+              _buildHeader(),
+
+              const SizedBox(height: 32),
+
+              _buildTabBar(),
+
+              const SizedBox(height: 16),
+
+              // IMPORTANT: Expanded agar TabBarView mengisi ruang tersisa
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // TAB LOGIN (scrollable)
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 40),
+                      child: _buildLoginForm(),
+                    ),
+
+                    // TAB REGISTER (scrollable)
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 40),
+                      child: _buildRegisterForm(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -103,16 +195,16 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         Text(
           AppConstants.appName,
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
         ),
         const SizedBox(height: 8),
         Text(
           'Login untuk mengakses dashboard analisis stres',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppTheme.textSecondary,
-          ),
+                color: AppTheme.textSecondary,
+              ),
         ),
       ],
     );
@@ -137,15 +229,19 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: _tabController.index == 0 ? Colors.white : Colors.transparent,
+                  color: _tabController.index == 0
+                      ? Colors.white
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
-                  boxShadow: _tabController.index == 0 ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ] : null,
+                  boxShadow: _tabController.index == 0
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Center(
                   child: Text(
@@ -153,8 +249,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: _tabController.index == 0 
-                          ? AppTheme.textPrimary 
+                      color: _tabController.index == 0
+                          ? AppTheme.textPrimary
                           : AppTheme.textSecondary,
                     ),
                   ),
@@ -172,15 +268,19 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: _tabController.index == 1 ? Colors.white : Colors.transparent,
+                  color: _tabController.index == 1
+                      ? Colors.white
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(6),
-                  boxShadow: _tabController.index == 1 ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ] : null,
+                  boxShadow: _tabController.index == 1
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Center(
                   child: Text(
@@ -188,8 +288,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: _tabController.index == 1 
-                          ? AppTheme.textPrimary 
+                      color: _tabController.index == 1
+                          ? AppTheme.textPrimary
                           : AppTheme.textSecondary,
                     ),
                   ),
@@ -209,7 +309,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 24),
-          
+
           // Email Field
           _buildTextField(
             controller: _loginEmailController,
@@ -218,9 +318,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             keyboardType: TextInputType.emailAddress,
             validator: _validateEmail,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Password Field
           _buildTextField(
             controller: _loginPasswordController,
@@ -239,9 +339,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               },
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Forgot Password
           Align(
             alignment: Alignment.centerRight,
@@ -249,7 +349,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               onPressed: () {
                 // TODO: Implement forgot password
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Fitur lupa password akan segera tersedia')),
+                  const SnackBar(
+                      content:
+                          Text('Fitur lupa password akan segera tersedia')),
                 );
               },
               child: const Text(
@@ -258,9 +360,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               ),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Login Button
           SizedBox(
             height: 48,
@@ -290,36 +392,36 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 8),
-          
+
           // Form Title
           Text(
             'Buat Akun',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
           ),
-          
+
           const SizedBox(height: 4),
-          
+
           Text(
             'Daftar untuk mulai menganalisis pola stres karyawan',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+                  color: AppTheme.textSecondary,
+                ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Name Field
           _buildTextField(
             controller: _registerNameController,
             label: 'Nama Lengkap',
             validator: _validateName,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Email Field
           _buildTextField(
             controller: _registerEmailController,
@@ -328,17 +430,17 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             keyboardType: TextInputType.emailAddress,
             validator: _validateEmail,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Company Field (Optional)
           _buildTextField(
             controller: _registerCompanyController,
             label: 'Organisasi/Perusahaan (Opsional)',
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Password Field
           _buildTextField(
             controller: _registerPasswordController,
@@ -348,7 +450,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             validator: _validatePassword,
             suffixIcon: IconButton(
               icon: Icon(
-                _obscureRegisterPassword ? Icons.visibility_off : Icons.visibility,
+                _obscureRegisterPassword
+                    ? Icons.visibility_off
+                    : Icons.visibility,
                 color: AppTheme.textSecondary,
               ),
               onPressed: () {
@@ -358,9 +462,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               },
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Register Button
           SizedBox(
             height: 48,
@@ -398,9 +502,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
         Text(
           label,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: AppTheme.textPrimary,
-            fontWeight: FontWeight.w500,
-          ),
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -524,14 +628,16 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     try {
       // Generate username from email (before @ symbol)
       final username = _registerEmailController.text.split('@')[0];
-      
+
       // Call real registration API
       final result = await AuthApiService.registerUser(
         username: username,
         email: _registerEmailController.text,
         password: _registerPasswordController.text,
         fullName: _registerNameController.text,
-        department: _registerCompanyController.text.isNotEmpty ? _registerCompanyController.text : null,
+        department: _registerCompanyController.text.isNotEmpty
+            ? _registerCompanyController.text
+            : null,
       );
 
       if (mounted) {
@@ -543,22 +649,23 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               backgroundColor: Colors.green,
             ),
           );
-          
+
           // Clear registration form
           _registerNameController.clear();
           _registerEmailController.clear();
           _registerCompanyController.clear();
           _registerPasswordController.clear();
-          
+
           // Switch to login tab
           _tabController.animateTo(0);
-          
+
           // Show info to login
           Future.delayed(const Duration(milliseconds: 500), () {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('📝 Silakan login dengan akun yang baru dibuat'),
+                  content:
+                      Text('📝 Silakan login dengan akun yang baru dibuat'),
                   backgroundColor: Colors.blue,
                   duration: Duration(seconds: 3),
                 ),
@@ -592,4 +699,4 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       }
     }
   }
-} 
+}
